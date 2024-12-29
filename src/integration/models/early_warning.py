@@ -1,4 +1,6 @@
 from typing import Dict
+import yaml
+from pathlib import Path
 
 class EarlyWarningSystem:
     def __init__(self):
@@ -6,6 +8,12 @@ class EarlyWarningSystem:
             'yellow': 1.2,  # 20% превышение
             'red': 1.5      # 50% превышение
         }
+        self.settings = self.load_settings()
+
+    def load_settings(self):
+        config_path = Path(__file__).parent.parent.parent / 'config' / 'settings.yaml'
+        with open(config_path) as f:
+            return yaml.safe_load(f)
         
     def check_status(self, step: str, days: float) -> str:
         standard_time = self.get_standard_time(step)
@@ -18,8 +26,4 @@ class EarlyWarningSystem:
         return 'green'
         
     def get_standard_time(self, step: str) -> int:
-        standard_times = {
-            'step1': 3, 'step2': 7, 'step3': 5,
-            'step4': 5, 'step5': 1, 'step6': 8, 'step7': 1
-        }
-        return standard_times[step]
+        return self.settings['integration']['steps'][step]
