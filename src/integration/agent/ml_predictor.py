@@ -1,9 +1,12 @@
+import numpy as np
 import pandas as pd
 from sklearn.ensemble import RandomForestRegressor
 from typing import List, Dict
+from ..utils.calculations import load_settings
 
 class MLPredictor:
     def __init__(self):
+        self.settings = load_settings()
         self.model = RandomForestRegressor()
         self.feature_columns = [
             'data_volume',
@@ -59,8 +62,8 @@ class MLPredictor:
     def convert_predictions_to_patterns(self, predictions) -> List[Dict]:
         patterns = []
         for pred in predictions:
-            # Нормализуем предсказание в вероятность от 0 до 1
-            normalized_prob = min(pred / 30.0, 1.0)  # 30 дней - целевое время
+            # Используем сигмоиду для нормализации вероятности
+            normalized_prob = 1 / (1 + np.exp(-0.1 * (pred - 30)))
             patterns.append({
                 'risk_level': float(pred),
                 'risk_type': 'schedule_risk' if pred > 0.7 else 'normal',
@@ -82,23 +85,31 @@ class MLPredictor:
         max_delay = remaining_steps * avg_step_time
         return risk_pattern['probability'] * max_delay
 
+    def get_step_time(self, step: int) -> int:
+        step_key = f'step{step}'
+        return self.settings['integration']['steps'][step_key]
+
     def estimate_resource_needs(self, risk_pattern: Dict, current_step: int) -> float:
         # Получаем оставшиеся шаги
         remaining_steps = 7 - current_step
-        # Среднее время на шаг из settings
-        avg_step_time = 5  
-        # Максимальная возможная задержка для оставшихся шагов
-        max_delay = remaining_steps * avg_step_time
-        return risk_pattern['probability'] * max_delay
+        total_time = sum(self.get_step_time(step) 
+            for step in range(current_step + 1, 8))
+        return risk_pattern['probability'] * total_time
 
     def estimate_quality_risk(self, risk_pattern: Dict) -> float:
         return risk_pattern['probability'] * 0.9
 
     def calculate_impact(self, risk_pattern: Dict, current_step: int) -> Dict:
+        # Получаем веса для текущего шага
+        step_weights = {
+            'schedule': self.settings['factors']['weights']['data_volume'],
+            'resource': self.settings['factors']['weights']['api_complexity'],
+            'quality': self.settings['factors']['weights']['data_quality']
+        }
         return {
-            'schedule_impact': self.estimate_delay(risk_pattern, current_step),
-            'resource_impact': self.estimate_resource_needs(risk_pattern, current_step),
-            'quality_impact': self.estimate_quality_risk(risk_pattern)
+            'schedule_impact': self.estimate_delay(risk_pattern, current_step) * step_weights['schedule'],
+            'resource_impact': self.estimate_resource_needs(risk_pattern, current_step) * step_weights['resource'],
+            'quality_impact': self.estimate_quality_risk(risk_pattern) * step_weights['quality']
         }
     
     def suggest_mitigation(self, risk_pattern: Dict, current_step: int) -> List[str]:
