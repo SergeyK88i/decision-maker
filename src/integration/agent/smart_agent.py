@@ -34,6 +34,8 @@ class IntegrationSmartAgent:
             }
         }
         prediction = self.predictor.predict_completion(source_data)
+        prediction['source_data'] = source_data  # Добавляем source_data в prediction
+
         risks = self.detect_risks(source_data)
         resources = self.resource_manager.get_current_allocation()
         critical_steps = self.identify_critical_steps(prediction)
@@ -111,10 +113,14 @@ class IntegrationSmartAgent:
     def generate_recommendations(self, prediction: Dict, risks: List[Dict], 
                                resources: Dict, critical_steps: List[str]) -> List[str]:
         recommendations = []
+
+        # Получаем текущий шаг из source_data
+        current_step = int(prediction['source_data']['current_progress']['step'].replace('step', ''))
+
         if prediction['warning_status'] == 'red':
             recommendations.append("Требуется немедленное вмешательство")
         for risk in risks:
-            recommendations.extend(self.ml_model.suggest_mitigation(risk))
+            recommendations.extend(self.ml_model.suggest_mitigation(risk, current_step))
         if critical_steps:
             recommendations.append(f"Особое внимание шагам: {', '.join([s['step'] for s in critical_steps])}")
         return recommendations

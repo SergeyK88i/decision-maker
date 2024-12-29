@@ -29,7 +29,10 @@ def run_demo():
     # Получаем умный анализ
     features = ml_predictor.extract_features(source_data)
     patterns = ml_predictor.analyze_patterns(source_data)
-    impact = ml_predictor.calculate_impact(patterns[0])
+    # Получаем текущий шаг из source_data
+    current_step = int(source_data['current_progress']['step'].replace('step', ''))
+
+    impact = ml_predictor.calculate_impact(patterns[0], current_step)
 
     # Создаем агента для комплексного анализа
     agent = IntegrationSmartAgent()
