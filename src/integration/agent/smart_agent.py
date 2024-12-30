@@ -156,8 +156,13 @@ class IntegrationSmartAgent:
 
         recommendations.append(f"Особое внимание текущим шагам: {', '.join(active_steps)}")
         # Анализ возможности параллельного выполнения
-        available_steps = [step for step in dependencies 
-                        if all(dep in steps_history for dep in dependencies[step])]
+        available_steps = [
+            step for step in dependencies 
+            if all(dep in steps_history for dep in dependencies[step])
+            # Возможно параллельное выполнение только активных шагов
+            and step not in steps_history
+            and step not in active_steps
+        ]  
         
         if available_steps:
             recommendations.append(f"Возможно параллельное выполнение шагов: {', '.join(available_steps)}")

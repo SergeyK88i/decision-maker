@@ -27,10 +27,10 @@ def run_demo():
                 'step2': 9          # факт выполнения
             },
             'available_parallel_steps': ['step2', 'step3'],         # шаги, которые можно выполнять параллельно
-            'active_parallel_steps': ['step3'],              # шаги, которые сейчас выполняются параллельно
+            'active_parallel_steps': ['step3','step4'],              # шаги, которые сейчас выполняются параллельно
             'steps_time': {
-                
-                'step3': 10                                  # время только активного шага
+                'step3': 10,                                  # время только активного шага
+                'step4': 15,
             },
             'steps_dependencies': {
                 'step1': [],

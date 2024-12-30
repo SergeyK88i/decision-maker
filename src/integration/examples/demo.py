@@ -15,13 +15,24 @@ def run_demo():
             'data_quality': 0       # высокое качество (1.0)
         },
         'current_progress': {
-            'active_parallel_steps': ['step3'],  # текущий активный шаг
+            'available_parallel_steps': ['step3', 'step4'],
+            'active_parallel_steps': ['step3','step4'],  # текущий активный шаг
             'steps_time': {
-                'step3': 10         # время текущего шага
-            },        # потрачено дней
+                'step3': 5 ,
+                'step4': 2 ,
+            },        
             'steps_history': {
                 'step1': 4,         # факт выполнения
                 'step2': 9          # факт выполнения
+            },
+            'steps_dependencies': {
+                'step1': [],
+                'step2': ['step1'],
+                'step3': ['step1'],
+                'step4': ['step2', 'step3'],
+                'step5': ['step4'],
+                'step6': ['step4'],
+                'step7': ['step5', 'step6']
             }
         },
     }
