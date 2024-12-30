@@ -89,21 +89,18 @@ class IntegrationSmartAgent:
     def identify_critical_steps(self, prediction: Dict) -> List[str]:
         critical_steps = []
         current_step = prediction['source_data']['current_progress']['step']
-        current_step_num = int(current_step.replace('step', ''))
-
+        
+        metrics = self.get_step_metrics(current_step)
         # Анализируем только текущий и будущие шаги
-        for step_num in range(current_step_num, 8):
-            step = f'step{step_num}'
-            metrics = self.get_step_metrics(step)
-            if metrics['risk_level'] > 0.7:
-                critical_steps.append({
-                    'step': step,
-                    'risk_level': metrics['risk_level'],
-                    'expected_delay': metrics['delay'],
-                    'required_skills': self.resource_manager.get_step_requirements(step)
-                })
+        if metrics['risk_level'] > 0.7:
+            critical_steps.append({
+                'step': current_step,
+                'risk_level': metrics['risk_level'],
+                'expected_delay': metrics['delay'],
+                'required_skills': self.resource_manager.get_step_requirements(current_step)
+            })
     
-        return sorted(critical_steps, key=lambda x: x['risk_level'], reverse=True)
+        return critical_steps
         # for step, metrics in prediction['step_metrics'].items():
         #     if metrics['risk_level'] > 0.7:
         #         critical_steps.append({
