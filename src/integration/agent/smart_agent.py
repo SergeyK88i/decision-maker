@@ -46,21 +46,14 @@ class IntegrationSmartAgent:
         }
         
     def analyze_integration(self, source_data: str) -> Dict:
-        # source_data = self.history_db.get_source_data(source_id)
-         # Временно заменим получение данных из БД на тестовые данные
-        # source_data = {
-        #     'characteristics': {
-        #         'data_volume': 1,
-        #         'api_complexity': 2,
-        #         'data_quality': 0
-        #     },
-        #     'current_progress': {
-        #         'step': 'step2',
-        #         'days_spent': 4
-        #     }
-        # }
         prediction = self.predictor.predict_completion(source_data)
-        prediction['source_data'] = source_data  # Добавляем source_data в prediction
+        prediction = {
+            'estimated_days': prediction['estimated_days'],
+            'warning_status': prediction['warning_status'],
+            'complexity_factor': prediction['complexity_factor'],
+            'statistical_data': prediction['statistical_data'],
+            'source_data': source_data
+        }
 
         risks = self.detect_risks(source_data)
         resources = self.resource_manager.get_current_allocation()
@@ -114,18 +107,19 @@ class IntegrationSmartAgent:
 
     def identify_critical_steps(self, prediction: Dict) -> List[str]:
         critical_steps = []
-        current_step = prediction['source_data']['current_progress']['step']
+        active_steps = prediction['source_data']['current_progress']['active_parallel_steps']
         
-        metrics = self.get_step_metrics(current_step)
-        # Анализируем только текущий и будущие шаги
-        if metrics['risk_level'] > 0.7:
-            critical_steps.append({
-                'step': current_step,
-                'risk_level': metrics['risk_level'],
-                'expected_delay': metrics['delay'],
-                'required_skills': self.resource_manager.get_step_requirements(current_step)
-            })
-    
+        for step in active_steps:
+            metrics = self.get_step_metrics(step)
+            # Анализируем только текущий и будущие шаги
+            if metrics['risk_level'] > 0.7:
+                critical_steps.append({
+                    'step': step,
+                    'risk_level': metrics['risk_level'],
+                    'expected_delay': metrics['delay'],
+                    'required_skills': self.resource_manager.get_step_requirements(step)
+                })
+        
         return critical_steps
         # for step, metrics in prediction['step_metrics'].items():
         #     if metrics['risk_level'] > 0.7:
@@ -149,7 +143,7 @@ class IntegrationSmartAgent:
     def generate_recommendations(self, prediction: Dict, risks: List[Dict], 
                                resources: Dict, critical_steps: List[str]) -> List[str]:
         recommendations = []
-        current_step = prediction['source_data']['current_progress']['step']
+        active_steps = prediction['source_data']['current_progress']['active_parallel_steps']
         parallel_steps = prediction['source_data']['current_progress'].get('parallel_steps', [])
         dependencies = prediction['source_data']['current_progress']['steps_dependencies']
         steps_history = prediction['source_data']['current_progress']['steps_history']
@@ -157,9 +151,10 @@ class IntegrationSmartAgent:
         if prediction['warning_status'] == 'red':
             recommendations.append("Требуется немедленное вмешательство")
         for risk in risks:
-            recommendations.extend(self.ml_model.suggest_mitigation(risk, current_step))
+            for step in active_steps:
+                recommendations.extend(self.ml_model.suggest_mitigation(risk, step))
 
-        recommendations.append(f"Особое внимание текущему шагу: {current_step}")
+        recommendations.append(f"Особое внимание текущим шагам: {', '.join(active_steps)}")
         # Анализ возможности параллельного выполнения
         available_steps = [step for step in dependencies 
                         if all(dep in steps_history for dep in dependencies[step])]

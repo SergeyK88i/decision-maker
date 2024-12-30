@@ -1,4 +1,4 @@
-from typing import Dict
+from typing import Dict, List
 import yaml
 from pathlib import Path
 
@@ -15,13 +15,18 @@ class EarlyWarningSystem:
         with open(config_path) as f:
             return yaml.safe_load(f)
         
-    def check_status(self, step: str, days: float) -> str:
-        standard_time = self.get_standard_time(step)
-        ratio = days / standard_time
-        
-        if ratio >= self.thresholds['red']:
+    def check_status(self, active_steps: List[str], steps_time: Dict) -> str:
+        # Берем максимальное отношение времени выполнения к стандартному
+        max_ratio = 0
+        for step in active_steps:
+            standard_time = self.get_standard_time(step)
+            actual_time = steps_time.get(step, 0)
+            ratio = actual_time / standard_time
+            max_ratio = max(max_ratio, ratio)
+    
+        if max_ratio >= self.thresholds['red']:
             return 'red'
-        elif ratio >= self.thresholds['yellow']:
+        elif max_ratio >= self.thresholds['yellow']:
             return 'yellow'
         return 'green'
         

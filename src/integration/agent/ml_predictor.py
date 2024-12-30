@@ -49,15 +49,17 @@ class MLPredictor:
         self.train(initial_data)
 
     def extract_features(self, source_data: Dict) -> pd.DataFrame:
-        current_step = source_data['current_progress']['step']
+        active_steps = source_data['current_progress']['active_parallel_steps']
         steps_time = source_data['current_progress'].get('steps_time', {})
     
         features = {
             'data_volume': source_data['characteristics']['data_volume'],
             'api_complexity': source_data['characteristics']['api_complexity'],
             'data_quality': source_data['characteristics']['data_quality'],
-            'current_step': int(current_step.replace('step', '')),
-            'days_spent': steps_time.get(current_step, 0),
+            # Берем максимальный номер шага из активных
+            'current_step': max(int(''.join(filter(str.isdigit, step))) for step in active_steps),
+            # Берем максимальное время из активных шагов
+            'days_spent': max(steps_time.get(step, 0) for step in active_steps),
             'parallel_steps_count': len(source_data['current_progress'].get('active_parallel_steps', []))
         }
         return pd.DataFrame([features])

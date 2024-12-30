@@ -21,16 +21,15 @@ def run_demo():
             'data_quality': 1        # Среднее качество
         },
         'current_progress': {
-            'step': 'step3',
-            'days_spent': 4,
+            
             'steps_history': {
                 'step1': 4,         # факт выполнения
                 'step2': 9          # факт выполнения
             },
             'available_parallel_steps': ['step2', 'step3'],         # шаги, которые можно выполнять параллельно
-            'active_parallel_steps': ['step2','step3'],              # шаги, которые сейчас выполняются параллельно
+            'active_parallel_steps': ['step3'],              # шаги, которые сейчас выполняются параллельно
             'steps_time': {
-                'step2': 3,
+                
                 'step3': 10                                  # время только активного шага
             },
             'steps_dependencies': {
@@ -52,9 +51,10 @@ def run_demo():
     features = ml_predictor.extract_features(source_data)
     patterns = ml_predictor.analyze_patterns(source_data)
     # Получаем текущий шаг из source_data
-    current_step = int(source_data['current_progress']['step'].replace('step', ''))
-
+    active_steps = source_data['current_progress']['active_parallel_steps']
+    current_step = max(int(''.join(filter(str.isdigit, step))) for step in active_steps)
     impact = ml_predictor.calculate_impact(patterns[0], current_step)
+
 
     # Создаем агента для комплексного анализа
     agent = IntegrationSmartAgent()

@@ -15,8 +15,10 @@ def run_demo():
             'data_quality': 0       # высокое качество (1.0)
         },
         'current_progress': {
-            'step': 'step3',        # текущий шаг
-            'days_spent': 10,        # потрачено дней
+            'active_parallel_steps': ['step3'],  # текущий активный шаг
+            'steps_time': {
+                'step3': 10         # время текущего шага
+            },        # потрачено дней
             'steps_history': {
                 'step1': 4,         # факт выполнения
                 'step2': 9          # факт выполнения
