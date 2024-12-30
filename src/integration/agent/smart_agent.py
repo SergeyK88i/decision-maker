@@ -73,15 +73,28 @@ class IntegrationSmartAgent:
             return action
         return Action.CONTINUE_MONITORING
 
+    def get_step_metrics(self, step: str) -> Dict:
+        # Динамический расчет метрик для шага на основе текущих данных
+        current_step_num = int(step.replace('step', ''))
+        base_risk = 0.5  # базовый риск
+        
+        # Увеличиваем риск для более поздних шагов
+        risk_level = base_risk + (current_step_num * 0.1)
+        
+        return {
+            'risk_level': risk_level,
+            'delay': max(0, current_step_num - 1)  # Потенциальная задержка растет с номером шага
+        }
+
     def identify_critical_steps(self, prediction: Dict) -> List[str]:
         critical_steps = []
-        # Добавить метрики шагов по умолчанию, если они отсутствуют
-        step_metrics = {
-            'step1': {'risk_level': 0.5, 'delay': 0},
-            'step2': {'risk_level': 0.8, 'delay': 2},
-            'step3': {'risk_level': 0.6, 'delay': 1}
-        }
-        for step, metrics in step_metrics.items():
+        current_step = prediction['source_data']['current_progress']['step']
+        current_step_num = int(current_step.replace('step', ''))
+
+        # Анализируем только текущий и будущие шаги
+        for step_num in range(current_step_num, 8):
+            step = f'step{step_num}'
+            metrics = self.get_step_metrics(step)
             if metrics['risk_level'] > 0.7:
                 critical_steps.append({
                     'step': step,
@@ -89,7 +102,7 @@ class IntegrationSmartAgent:
                     'expected_delay': metrics['delay'],
                     'required_skills': self.resource_manager.get_step_requirements(step)
                 })
-            
+    
         return sorted(critical_steps, key=lambda x: x['risk_level'], reverse=True)
         # for step, metrics in prediction['step_metrics'].items():
         #     if metrics['risk_level'] > 0.7:
