@@ -6,7 +6,7 @@ class IntegrationTarget:
         
     def calculate_target(self, actual_days: float) -> Dict:
         deviation = actual_days - self.target_days
-        completion_rate = self.target_days / actual_days if actual_days > 0 else 0
+        completion_rate = min(1.0, self.target_days / actual_days) if actual_days > 0 else 0
         
         return {
             'on_time': actual_days <= self.target_days,

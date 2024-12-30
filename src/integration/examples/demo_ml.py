@@ -21,8 +21,8 @@ def run_demo():
             'data_quality': 1        # Среднее качество
         },
         'current_progress': {
-            'step': 'step2',
-            'days_spent': 6
+            'step': 'step3',
+            'days_spent': 4
         }
     }
 

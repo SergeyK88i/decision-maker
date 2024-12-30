@@ -16,8 +16,12 @@ def run_demo():
         },
         'current_progress': {
             'step': 'step3',        # текущий шаг
-            'days_spent': 4         # потрачено дней
-        }
+            'days_spent': 10,        # потрачено дней
+            'steps_history': {
+                'step1': 4,         # факт выполнения
+                'step2': 9          # факт выполнения
+            }
+        },
     }
 
     # Получаем прогноз
