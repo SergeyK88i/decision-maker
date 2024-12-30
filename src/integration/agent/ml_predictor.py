@@ -77,24 +77,37 @@ class MLPredictor:
         self.model.fit(X, y)
         
     def estimate_delay(self, risk_pattern: Dict, current_step: int) -> float:
-        # Получаем оставшиеся шаги
-        remaining_steps = 7 - current_step
-        # Среднее время на шаг из settings
-        avg_step_time = 5  
-        # Максимальная возможная задержка для оставшихся шагов
-        max_delay = remaining_steps * avg_step_time
-        return risk_pattern['probability'] * max_delay
+        steps = self.settings['integration']['steps']
+        # Преобразуем current_step в число, если это строка
+        if isinstance(current_step, str):
+            current_step = int(current_step.replace('step', ''))
+        
+        remaining_steps = {
+            k: v for k, v in steps.items() 
+            if int(k.replace('step', '')) > current_step
+        }
+        
+        total_remaining_time = sum(remaining_steps.values())
+        return risk_pattern['probability'] * total_remaining_time
 
     def get_step_time(self, step: int) -> int:
         step_key = f'step{step}'
         return self.settings['integration']['steps'][step_key]
 
     def estimate_resource_needs(self, risk_pattern: Dict, current_step: int) -> float:
-        # Получаем оставшиеся шаги
-        remaining_steps = 7 - current_step
-        total_time = sum(self.get_step_time(step) 
-            for step in range(current_step + 1, 8))
-        return risk_pattern['probability'] * total_time
+        steps = self.settings['integration']['steps']
+    
+        # Преобразуем current_step в число, если это строка
+        if isinstance(current_step, str):
+            current_step = int(current_step.replace('step', ''))
+            
+        remaining_steps = {
+            k: v for k, v in steps.items() 
+            if int(k.replace('step', '')) > current_step
+        }
+    
+        total_remaining_time = sum(remaining_steps.values())
+        return risk_pattern['probability'] * total_remaining_time
 
     def estimate_quality_risk(self, risk_pattern: Dict) -> float:
         return risk_pattern['probability'] * 0.9

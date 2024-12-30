@@ -26,6 +26,16 @@ def run_demo():
             'steps_history': {
                 'step1': 4,         # факт выполнения
                 'step2': 9          # факт выполнения
+            },
+            'parallel_steps': ['step2', 'step3'],
+            'steps_dependencies': {
+                'step1': [],
+                'step2': ['step1'],
+                'step3': ['step1'],
+                'step4': ['step2', 'step3'],
+                'step5': ['step4'],
+                'step6': ['step4'],
+                'step7': ['step5', 'step6']
             }
         }
     }

@@ -123,14 +123,25 @@ class IntegrationSmartAgent:
     def generate_recommendations(self, prediction: Dict, risks: List[Dict], 
                                resources: Dict, critical_steps: List[str]) -> List[str]:
         recommendations = []
-
-        # Получаем текущий шаг из source_data
-        current_step = int(prediction['source_data']['current_progress']['step'].replace('step', ''))
+        current_step = prediction['source_data']['current_progress']['step']
+        parallel_steps = prediction['source_data']['current_progress'].get('parallel_steps', [])
+        dependencies = prediction['source_data']['current_progress']['steps_dependencies']
+        steps_history = prediction['source_data']['current_progress']['steps_history']
 
         if prediction['warning_status'] == 'red':
             recommendations.append("Требуется немедленное вмешательство")
         for risk in risks:
             recommendations.extend(self.ml_model.suggest_mitigation(risk, current_step))
-        if critical_steps:
-            recommendations.append(f"Особое внимание шагам: {', '.join([s['step'] for s in critical_steps])}")
+
+        recommendations.append(f"Особое внимание текущему шагу: {current_step}")
+        # Анализ возможности параллельного выполнения
+        available_steps = [step for step in dependencies 
+                        if all(dep in steps_history for dep in dependencies[step])]
+        
+        if available_steps:
+            recommendations.append(f"Возможно параллельное выполнение шагов: {', '.join(available_steps)}")
+        
+        if parallel_steps:
+            recommendations.append(f"Текущие параллельные шаги: {', '.join(parallel_steps)}")
+
         return recommendations
