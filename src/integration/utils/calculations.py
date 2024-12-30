@@ -14,7 +14,7 @@ def get_standard_time(step: str) -> int:
 def calculate_final_estimate(stats: Dict, complexity: float, 
                            current_progress: Dict) -> float:
     base_time = get_standard_time(current_progress['step'])
-    steps_history = current_progress['steps_history']
+    steps_history = current_progress.get('steps_history', {})
 
     # Рассчитываем тренд задержек
     delay_factor = 1.0
@@ -26,8 +26,9 @@ def calculate_final_estimate(stats: Dict, complexity: float,
             current_delay = actual_time / standard_time
             delays.append(current_delay)
             # Добавляем штраф за каждую задержку
-            if actual_time > standard_time:
-                delay_penalty *= 1.2
+            if current_delay > 1:
+                overtime_percent = (current_delay - 1) * 100
+                delay_penalty *= (1 + overtime_percent / 100)
 
         delay_factor = sum(delays) / len(delays)
 

@@ -22,9 +22,16 @@ def run_demo():
         },
         'current_progress': {
             'step': 'step3',
-            'days_spent': 4
+            'days_spent': 4,
+            'steps_history': {
+                'step1': 4,         # факт выполнения
+                'step2': 9          # факт выполнения
+            }
         }
     }
+    # Получаем стандартный прогноз
+    predictor = IntegrationPredictor()
+    prediction = predictor.predict_completion(source_data)
 
     # Получаем умный анализ
     features = ml_predictor.extract_features(source_data)
