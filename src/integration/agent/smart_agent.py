@@ -19,20 +19,20 @@ class IntegrationSmartAgent:
         self.ml_model = MLPredictor()
         # self.history_db = HistoricalDatabase()
         
-    def analyze_integration(self, source_id: str) -> Dict:
+    def analyze_integration(self, source_data: str) -> Dict:
         # source_data = self.history_db.get_source_data(source_id)
          # Временно заменим получение данных из БД на тестовые данные
-        source_data = {
-            'characteristics': {
-                'data_volume': 1,
-                'api_complexity': 2,
-                'data_quality': 0
-            },
-            'current_progress': {
-                'step': 'step2',
-                'days_spent': 4
-            }
-        }
+        # source_data = {
+        #     'characteristics': {
+        #         'data_volume': 1,
+        #         'api_complexity': 2,
+        #         'data_quality': 0
+        #     },
+        #     'current_progress': {
+        #         'step': 'step2',
+        #         'days_spent': 4
+        #     }
+        # }
         prediction = self.predictor.predict_completion(source_data)
         prediction['source_data'] = source_data  # Добавляем source_data в prediction
 
