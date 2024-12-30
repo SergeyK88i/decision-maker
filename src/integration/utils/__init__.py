@@ -5,5 +5,6 @@ from .calculations import (
 
 __all__ = [
     'calculate_final_estimate',
-    'get_standard_time'
+    'get_standard_time',
+    'calculate_parallel_time'
 ]

@@ -18,6 +18,32 @@ class IntegrationSmartAgent:
         self.resource_manager = ResourceManager()
         self.ml_model = MLPredictor()
         # self.history_db = HistoricalDatabase()
+
+    def analyze_parallel_steps(self, source_data: Dict) -> Dict:
+        current_progress = source_data['current_progress']
+        dependencies = current_progress['steps_dependencies']
+        steps_history = current_progress['steps_history']
+    
+        # Определяем доступные для параллельного выполнения шаги
+        available_parallel = [
+            step for step in dependencies 
+            if all(dep in steps_history for dep in dependencies[step])
+        ]
+    
+        # Получаем активные параллельные шаги
+        active_parallel = current_progress.get('active_parallel_steps', [])
+    
+        # Находим шаги, которые можно начать выполнять параллельно
+        potential_parallel = [
+            step for step in available_parallel 
+            if step not in active_parallel
+        ]
+    
+        return {
+            'available_parallel': available_parallel,
+            'active_parallel': active_parallel,
+            'potential_parallel': potential_parallel
+        }
         
     def analyze_integration(self, source_data: str) -> Dict:
         # source_data = self.history_db.get_source_data(source_id)

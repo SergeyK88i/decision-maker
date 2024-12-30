@@ -13,7 +13,8 @@ class MLPredictor:
             'api_complexity',
             'data_quality',
             'current_step',
-            'days_spent'
+            'days_spent',
+            'parallel_steps_count' 
         ]
         # Initial training data
         initial_data = [
@@ -23,7 +24,8 @@ class MLPredictor:
                 'data_quality': 0,       # Низкое качество
                 'current_step': 2,       # Шаг 2
                 'days_spent': 8,         # Потрачено дней
-                'completion_time': 45    # Итоговое время
+                'completion_time': 45,    # Итоговое время
+                'parallel_steps_count': 0
             },
             {   
                 'data_volume': 1,        # Средний объем
@@ -31,7 +33,8 @@ class MLPredictor:
                 'data_quality': 1,       # Среднее качество
                 'current_step': 2,
                 'days_spent': 5,
-                'completion_time': 25
+                'completion_time': 25,
+                'parallel_steps_count': 0
             },
             {
                 'data_volume': 0,        # Малый объем
@@ -39,18 +42,23 @@ class MLPredictor:
                 'data_quality': 2,       # Высокое качество
                 'current_step': 2,
                 'days_spent': 4,
-                'completion_time': 20
+                'completion_time': 20,
+                'parallel_steps_count': 0
             }
         ]
         self.train(initial_data)
 
     def extract_features(self, source_data: Dict) -> pd.DataFrame:
+        current_step = source_data['current_progress']['step']
+        steps_time = source_data['current_progress'].get('steps_time', {})
+    
         features = {
             'data_volume': source_data['characteristics']['data_volume'],
             'api_complexity': source_data['characteristics']['api_complexity'],
             'data_quality': source_data['characteristics']['data_quality'],
-            'current_step': int(source_data['current_progress']['step'].replace('step', '')),
-            'days_spent': source_data['current_progress']['days_spent']
+            'current_step': int(current_step.replace('step', '')),
+            'days_spent': steps_time.get(current_step, 0),
+            'parallel_steps_count': len(source_data['current_progress'].get('active_parallel_steps', []))
         }
         return pd.DataFrame([features])
 
