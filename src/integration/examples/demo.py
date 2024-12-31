@@ -5,6 +5,8 @@ root_dir = os.path.dirname(os.path.dirname(os.path.dirname(current_dir)))
 sys.path.insert(0, root_dir)
 from src.integration.predictor import IntegrationPredictor
 from src.integration.target import IntegrationTarget
+from src.integration.utils.calculations import get_standard_time
+
 
 def run_demo():
     # Создаём тестовый источник
@@ -38,12 +40,34 @@ def run_demo():
             }
         },
     }
+    # Получаем прогноз
+    predictor = IntegrationPredictor()
+
     # Получаем текущий шаг из активных шагов
     active_steps = source_data['current_progress']['active_parallel_steps']
     current_step = max(int(''.join(filter(str.isdigit, step))) for step in active_steps)
 
-    # Получаем прогноз
-    predictor = IntegrationPredictor()
+
+    # Получаем все шаги из dependencies
+    all_steps = source_data['current_progress']['steps_dependencies'].keys()
+    
+    # Считаем общее ожидаемое время
+    total_expected = sum(predictor.statistical_model.calculate_metrics(step)['mean'] for step in all_steps)
+    total_standard = sum(get_standard_time(step) for step in all_steps)
+    
+
+     # Получаем начальный прогноз
+    initial = predictor.initial_estimate(source_data)
+    print(f"""
+    Начальный прогноз:
+    - Ожидаемое время: {initial['initial_estimate']:.1f} дней
+    - Стандартное время: {initial['standard_time']} дней
+
+    Общий прогноз всех шагов:
+    - Ожидаемое время всех шагов: {total_expected:.1f} дней
+    - Стандартное время всех шагов: {total_standard} дней
+    """)
+
     prediction = predictor.predict_completion(source_data)
     print(f"predictor: {predictor}")
     print(f"Прогноз: {prediction}")

@@ -2,7 +2,7 @@ from typing import Dict
 from .models.statistical import StatisticalModel
 from .models.early_warning import EarlyWarningSystem
 from .models.factor import FactorAnalysis
-from .utils.calculations import calculate_final_estimate, calculate_parallel_time
+from .utils.calculations import calculate_final_estimate, calculate_parallel_time, get_standard_time
 
 class IntegrationPredictor:
     def __init__(self):
@@ -47,4 +47,35 @@ class IntegrationPredictor:
             'complexity_factor': complexity,
             'statistical_data': max_stats
         }
+
+    def initial_estimate(self, source_data: Dict) -> Dict:
+        active_steps = source_data['current_progress']['active_parallel_steps']
+        
+        # Получаем статистику для активных шагов
+        stats = {
+            step: self.statistical_model.calculate_metrics(step) 
+            for step in active_steps
+        }
+        
+        # Максимальное среднее время из статистики
+        max_stats = {
+            'mean': max(s['mean'] for s in stats.values()),
+            'median': max(s['median'] for s in stats.values()),
+            'std': max(s['std'] for s in stats.values())
+        }
+        
+        # Считаем сложность
+        complexity = self.factor_analysis.calculate_multiplier(source_data['characteristics'])
+        
+        # Начальная оценка времени
+        initial_time = max_stats['mean'] * complexity
+        
+        return {
+            'initial_estimate': initial_time,
+            'standard_time': max(get_standard_time(step) for step in active_steps),
+            'complexity': complexity,
+            'stats': max_stats
+        }
+
+
 

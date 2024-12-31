@@ -51,7 +51,7 @@ class IntegrationTarget:
             # Вероятность уложиться в срок
             # Чем больше запас по времени, тем выше вероятность
                 buffer = (self.target_days - total_time) / self.target_days
-                completion_rate = min(1.0, buffer * 2)  # Нормализуем до 100%        
+                completion_rate = min(0.9, buffer)  # Нормализуем до 100%        
             
         return {
             'on_time': predicted_days <= self.target_days,
