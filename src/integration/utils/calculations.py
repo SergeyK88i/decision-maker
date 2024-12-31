@@ -55,10 +55,14 @@ def calculate_final_estimate(stats: Dict, complexity: float, current_progress: D
     dependencies = current_progress['steps_dependencies']
     steps_time = current_progress.get('steps_time', {})
     steps_history = current_progress.get('steps_history', {})
+    active_steps = current_progress['active_parallel_steps']
     
     # Рассчитываем базовое время по критическому пути
     critical_path_time = calculate_critical_path(dependencies, steps_time)
     
+    # Максимальное время из активных параллельных шагов
+    active_time = max(steps_time.get(step, 0) for step in active_steps)
+
     # Рассчитываем тренд задержек
     delay_factor = 1.0
     if steps_history:
@@ -83,14 +87,21 @@ def calculate_final_estimate(stats: Dict, complexity: float, current_progress: D
     )) if active_steps else 1.0
     
     # Итоговый расчет с учетом всех факторов
-    adjusted_time = (
-        critical_path_time 
-        * complexity 
-        * delay_factor 
-        * statistical_factor 
-        * progress_factor
-    )
-    print(f"Calculation: {critical_path_time} * {complexity} * {delay_factor} * {statistical_factor} * {progress_factor} = {adjusted_time}")
+    # adjusted_time = (
+    #     critical_path_time 
+    #     * complexity 
+    #     * delay_factor 
+    #     * statistical_factor 
+    #     * progress_factor
+    # )
+
+    # Новая интеграция - используем statistical_factor
+    if not steps_history:
+        adjusted_time = standard_time * complexity * statistical_factor
+    # Есть история - используем delay_factor
+    else:
+        adjusted_time = active_time * complexity * delay_factor
+    # print(f"Calculation: {critical_path_time} * {complexity} * {delay_factor} * {statistical_factor} * {progress_factor} = {adjusted_time}")
     return adjusted_time
 
 
