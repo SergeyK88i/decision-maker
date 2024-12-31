@@ -10,20 +10,20 @@ def run_demo():
     # Создаём тестовый источник
     source_data = {
         'characteristics': {
-            'data_volume': 1,       # средний объем (1.2)
-            'api_complexity': 2,    # сложный API (1.6)
+            'data_volume': 0,       # средний объем (1.2)
+            'api_complexity': 0,    # сложный API (1.6)
             'data_quality': 0       # высокое качество (1.0)
         },
         'current_progress': {
             'available_parallel_steps': ['step3', 'step4'],
             'active_parallel_steps': ['step3','step4'],  # текущий активный шаг
             'steps_time': {
-                'step3': 5 ,
-                'step4': 2 ,
+                'step3': 1 ,
+                'step4': 7 ,
             },        
             'steps_history': {
-                'step1': 4,         # факт выполнения
-                'step2': 9          # факт выполнения
+                'step1': 3,         # факт выполнения
+                'step2': 12          # факт выполнения
             },
             'steps_dependencies': {
                 'step1': [],
@@ -36,6 +36,9 @@ def run_demo():
             }
         },
     }
+    # Получаем текущий шаг из активных шагов
+    active_steps = source_data['current_progress']['active_parallel_steps']
+    current_step = max(int(''.join(filter(str.isdigit, step))) for step in active_steps)
 
     # Получаем прогноз
     predictor = IntegrationPredictor()
@@ -45,7 +48,11 @@ def run_demo():
 
     # Проверяем цель
     target = IntegrationTarget()
-    result = target.calculate_target(prediction['estimated_days'])
+    result = target.calculate_target(
+        prediction['estimated_days'],
+        source_data['current_progress']['steps_history'],
+        current_step
+    )
 
     print(f"""
     Прогноз интеграции:
@@ -54,6 +61,17 @@ def run_demo():
     - Сложность: {prediction['complexity_factor']:.2f}
     - Вероятность уложиться в срок: {result['completion_rate']*100:.1f}%
     """)
+    print(f"""
+    Прогноз интеграции:
+    - Затрачено времени: {result['historical_time']:.1f} дней
+    - Текущие шаги в работе: {prediction['estimated_days']:.1f} дней
+    - Осталось на будущие шаги: {result['remaining_time']:.1f} дней
+    - Общее время загрузки: {result['total_time']:.1f} дней
+    - Целевое время: {target.target_days} дней
+    - Вероятность уложиться в срок: {result['completion_rate']:.1f}%
+    """)
+
+
     print(f"Результат: {result}")
 
 if __name__ == '__main__':

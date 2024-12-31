@@ -76,11 +76,11 @@ def calculate_final_estimate(stats: Dict, complexity: float, current_progress: D
     
     # Прогресс текущих шагов
     active_steps = current_progress['active_parallel_steps']
-    progress_factor = max(
+    progress_factor = min(1.5,max(
         steps_time.get(step, 0) / get_standard_time(step)
         for step in active_steps
         if get_standard_time(step) > 0
-    ) if active_steps else 1.0
+    )) if active_steps else 1.0
     
     # Итоговый расчет с учетом всех факторов
     adjusted_time = (
@@ -90,7 +90,7 @@ def calculate_final_estimate(stats: Dict, complexity: float, current_progress: D
         * statistical_factor 
         * progress_factor
     )
-    # print(f"Calculation: {critical_path_time} * {complexity} * {delay_factor} * {statistical_factor} * {progress_factor} = {adjusted_time}")
+    print(f"Calculation: {critical_path_time} * {complexity} * {delay_factor} * {statistical_factor} * {progress_factor} = {adjusted_time}")
     return adjusted_time
 
 
