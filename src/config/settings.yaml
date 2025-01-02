@@ -1,0 +1,20 @@
+integration:
+  target_days: 30
+  steps:
+    step1: 3
+    step2: 7
+    step3: 5
+    step4: 5
+    step5: 1
+    step6: 8
+    step7: 1
+  
+thresholds:
+  yellow_multiplier: 1.2
+  red_multiplier: 1.5
+
+factors:
+  weights:
+    data_volume: 0.4
+    api_complexity: 0.4
+    data_quality: 0.2
