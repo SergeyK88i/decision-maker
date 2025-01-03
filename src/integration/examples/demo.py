@@ -22,12 +22,12 @@ def run_demo():
             # текущий активный шаг
             'active_parallel_steps': ['step3','step4'],     
             'steps_time': {
-                'step3': 6 ,
+                'step3': 3 ,
                 'step4': 1 ,
             },        
             'steps_history': {
                 'step1': 3,         
-                'step2': 4          
+                'step2': 5          
             },
             'steps_dependencies': {
                 'step1': [],
@@ -95,6 +95,17 @@ def run_demo():
     - Общее время загрузки: {result['total_time']:.1f} дней
     - Целевое время: {target.target_days} дней
     - Вероятность уложиться в срок: {result['completion_rate']:.1f}%
+    """)
+    progress = predictor.calculate_progress_estimate(source_data)
+
+    print(f"""
+    Прогресс интеграции:
+    - Baseline прогноз: {progress['baseline_estimate']:.1f} дней
+    - Затрачено времени: {progress['days_spent']:.1f} дней
+    - Осталось (прогноз): {progress['remaining_estimate']:.1f} дней
+    - Общий прогноз: {progress['total_estimate']:.1f} дней
+    - Выполнено: {progress['completion_percent']:.1f}%
+    - Фактор задержки: {progress['delay_factor']:.2f}
     """)
 
 

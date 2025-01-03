@@ -10,6 +10,44 @@ class IntegrationPredictor:
         self.early_warning = EarlyWarningSystem()
         self.factor_analysis = FactorAnalysis()
         
+    def calculate_progress_estimate(self, source_data: Dict) -> Dict:
+        # Получаем все шаги
+        all_steps = source_data['current_progress']['steps_dependencies'].keys()
+        
+        # Baseline из статистики (34.8 дней)
+        baseline_estimate = sum(
+            self.statistical_model.calculate_metrics(step)['mean'] 
+            for step in all_steps
+        )
+        
+        steps_history = source_data['current_progress']['steps_history']
+        
+        # Фактически потраченное время
+        days_spent = sum(steps_history.values())
+        
+        # Процент выполненных шагов
+        completed_steps_percent = len(steps_history) / len(all_steps)
+        
+        # Расчет delay_factor
+        delays = []
+        for step, time in steps_history.items():
+            standard = get_standard_time(step)
+            delay = time / standard if standard > 0 else 1.0
+            delays.append(delay)
+        delay_factor = sum(delays) / len(delays) if delays else 1.0
+        
+        # Оценка оставшегося времени
+        remaining_estimate = baseline_estimate * (1 - completed_steps_percent) * delay_factor
+        
+        return {
+            'baseline_estimate': baseline_estimate,
+            'days_spent': days_spent,
+            'remaining_estimate': remaining_estimate,
+            'total_estimate': days_spent + remaining_estimate,
+            'completion_percent': completed_steps_percent * 100,
+            'delay_factor': delay_factor
+        }
+
     def predict_completion(self, source_data: Dict) -> Dict:
         active_steps = source_data['current_progress']['active_parallel_steps']
         steps_time = source_data['current_progress'].get('steps_time', {})
