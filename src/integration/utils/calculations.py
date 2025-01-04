@@ -50,6 +50,18 @@ def calculate_critical_path(dependencies: Dict, steps_time: Dict) -> float:
     
     # Вычисляем максимальное время критического пути
     return max(get_path_time(step, set()) for step in end_steps)
+    
+def calculate_step_correlations(steps_history: Dict) -> Dict:
+    correlations = {}
+    for step1, time1 in steps_history.items():
+        for step2, time2 in steps_history.items():
+            if step1 != step2:
+                std1 = get_standard_time(step1)
+                std2 = get_standard_time(step2)
+                delay1 = time1 / std1
+                delay2 = time2 / std2
+                correlations[f"{step1}-{step2}"] = delay1 * delay2
+    return correlations
 
 def calculate_final_estimate(stats: Dict, complexity: float, current_progress: Dict) -> float:
     dependencies = current_progress['steps_dependencies']

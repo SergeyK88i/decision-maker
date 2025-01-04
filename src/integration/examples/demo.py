@@ -6,6 +6,9 @@ sys.path.insert(0, root_dir)
 from src.integration.predictor import IntegrationPredictor
 from src.integration.target import IntegrationTarget
 from src.integration.utils.calculations import get_standard_time
+from src.integration.models.factor import FactorAnalysis
+from src.integration.models.statistical import StatisticalModel
+from src.integration.utils.calculations import calculate_step_correlations
 
 
 def run_demo():
@@ -27,7 +30,7 @@ def run_demo():
             },        
             'steps_history': {
                 'step1': 3,         
-                'step2': 5          
+                'step2': 1          
             },
             'steps_dependencies': {
                 'step1': [],
@@ -97,6 +100,17 @@ def run_demo():
     - Вероятность уложиться в срок: {result['completion_rate']:.1f}%
     """)
     progress = predictor.calculate_progress_estimate(source_data)
+
+    target = IntegrationTarget()
+    probability = target.calculate_completion_probability(source_data)
+
+    print(f"""
+    Анализ вероятности завершения:
+    - Вероятность уложиться в срок: {probability*100:.1f}%
+    - Тренды выполнения шагов: {target.statistical_model.analyze_trends('step1')}
+    - Сложность оставшихся шагов: {target.factor_analysis.calculate_step_complexity('step4', source_data['current_progress']['steps_dependencies'])}
+    - Корреляции между шагами: {calculate_step_correlations(source_data['current_progress']['steps_history'])}
+    """)
 
     print(f"""
     Прогресс интеграции:

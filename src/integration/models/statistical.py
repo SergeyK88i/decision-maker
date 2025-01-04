@@ -27,3 +27,15 @@ class StatisticalModel:
             # Стандартное отклонение показывает, насколько значения в наборе данных разбросаны относительно среднего значения.
             'std': np.std(data)
         }
+    def analyze_trends(self, step: str) -> Dict:
+        data = self.historical_data[step]
+        # Анализ последних 3 значений для тренда
+        recent_trend = data[-3:]
+        trend_factor = sum(y - x for x, y in zip(recent_trend, recent_trend[1:])) / len(recent_trend)
+        
+        return {
+            'trend_factor': trend_factor,
+            'std': np.std(data),
+            'delay_probability': len([x for x in data if x > np.mean(data)]) / len(data)
+        }
+

@@ -2,12 +2,64 @@ from typing import Dict
 import math
 from .utils.calculations import get_standard_time
 from .models.statistical import StatisticalModel
+from .models.factor import FactorAnalysis
+from .utils.calculations import calculate_step_correlations, get_standard_time
+
 
 class IntegrationTarget:
     def __init__(self):
         self.target_days = 30
         self.statistical_model = StatisticalModel()
+        self.factor_analysis = FactorAnalysis()
+
+    def calculate_completion_probability(self, source_data: Dict) -> float:
+        steps_history = source_data['current_progress']['steps_history']
+        steps_time = source_data['current_progress'].get('steps_time', {})
+        dependencies = source_data['current_progress']['steps_dependencies']
         
+        # Рассчитываем total_time
+        historical_time = sum(steps_history.values())
+        stats = self.statistical_model.calculate_metrics(f'step{max(int(step[-1]) for step in steps_history)}')
+        current_time = sum(steps_time.values())
+        remaining_steps_time = sum(get_standard_time(f'step{i}') for i in range(len(steps_history) + 1, 8))
+        
+        total_time = (
+            historical_time * 1.0 +
+            current_time * (1 + stats['std']) +
+            remaining_steps_time * 1.2
+        )
+        
+        # Базовый расчет по времени
+        time_factor = (self.target_days - total_time) / self.target_days
+        
+        # Анализ трендов для оставшихся шагов
+        remaining_steps = set(dependencies.keys()) - set(steps_history.keys())
+        trends = [
+            self.statistical_model.analyze_trends(step)
+            for step in remaining_steps
+        ]
+        
+        # Учитываем сложность оставшихся шагов
+        complexities = [
+            self.factor_analysis.calculate_step_complexity(step, dependencies)
+            for step in remaining_steps
+        ]
+        
+        # Корреляции между шагами
+        correlations = calculate_step_correlations(steps_history)
+        
+        # Итоговый расчет с учетом всех факторов
+        completion_rate = time_factor * (
+            1 - sum(t['trend_factor'] for t in trends) / len(trends)
+        ) / (
+            sum(complexities) / len(complexities)
+        ) * (
+            1 - sum(correlations.values()) / len(correlations) if correlations else 1
+        )
+        
+        return min(0.9, max(0, completion_rate))
+
+
     def calculate_target(self, actual_days: float, steps_history: Dict, current_step: int) -> Dict:
         # История выполненных шагов
         historical_time = sum(steps_history.values())

@@ -18,3 +18,9 @@ factors:
     data_volume: 0.4
     api_complexity: 0.4
     data_quality: 0.2
+
+probability:
+  trend_weight: 0.3
+  complexity_weight: 0.4
+  correlation_weight: 0.3
+
