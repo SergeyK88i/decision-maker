@@ -8,7 +8,7 @@ from src.integration.target import IntegrationTarget
 from src.integration.utils.calculations import get_standard_time
 from src.integration.models.factor import FactorAnalysis
 from src.integration.models.statistical import StatisticalModel
-from src.integration.utils.calculations import calculate_step_correlations
+from src.integration.utils.calculations import calculate_step_correlations, analyze_parallel_risks, get_parallel_risk_status
 
 
 def run_demo():
@@ -107,10 +107,23 @@ def run_demo():
     print(f"""
     Анализ вероятности завершения:
     - Вероятность уложиться в срок: {probability*100:.1f}%
+
+    Анализ трендов:
     - Тренды выполнения шагов: {target.statistical_model.analyze_trends('step1')}
+    - Распределение задержек: {target.statistical_model.analyze_delay_distribution('step1')}
+
+    Анализ сложности:
     - Сложность оставшихся шагов: {target.factor_analysis.calculate_step_complexity('step4', source_data['current_progress']['steps_dependencies'])}
+
+    Анализ зависимостей:
     - Корреляции между шагами: {calculate_step_correlations(source_data['current_progress']['steps_history'])}
+    - Риски параллельного выполнения: {analyze_parallel_risks(source_data['current_progress']['active_parallel_steps'], source_data['current_progress']['steps_dependencies'])}
     """)
+    parallel_steps = source_data['current_progress']['active_parallel_steps']
+    dependencies = source_data['current_progress']['steps_dependencies']
+    risk = analyze_parallel_risks(parallel_steps, dependencies)
+    status = get_parallel_risk_status(risk)
+    print(f"Риск параллельного выполнения: {risk} (статус: {status})")
 
     print(f"""
     Прогресс интеграции:
@@ -123,7 +136,7 @@ def run_demo():
     """)
 
 
-    print(f"Результат: {result}")
+    # print(f"Результат: {result}")
 
 if __name__ == '__main__':
     run_demo()

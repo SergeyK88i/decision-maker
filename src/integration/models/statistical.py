@@ -1,5 +1,6 @@
 from typing import Dict, List
 import numpy as np
+from ..utils.calculations import get_standard_time
 
 class StatisticalModel:
     def __init__(self):
@@ -38,4 +39,13 @@ class StatisticalModel:
             'std': np.std(data),
             'delay_probability': len([x for x in data if x > np.mean(data)]) / len(data)
         }
+    def analyze_delay_distribution(self, step: str) -> Dict:
+        data = self.historical_data[step]
+        standard_time = get_standard_time(step)
+        delays = [time/standard_time for time in data]
+        return {
+            'high_delay_prob': len([d for d in delays if d > 1.2]) / len(delays),
+            'critical_delay_prob': len([d for d in delays if d > 1.5]) / len(delays)
+        }
+
 

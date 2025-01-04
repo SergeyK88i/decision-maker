@@ -1,4 +1,4 @@
-from typing import Dict
+from typing import Dict, List
 import yaml
 from pathlib import Path
 
@@ -6,6 +6,15 @@ def load_settings():
     config_path = Path(__file__).parent.parent.parent / 'config' / 'settings.yaml'
     with open(config_path) as f:
         return yaml.safe_load(f)
+def get_parallel_risk_status(risk: float) -> str:
+    settings = load_settings()
+    thresholds = settings['integration']['parallel_risks']
+    
+    if risk < thresholds['safe_threshold']:
+        return 'safe'
+    elif risk < thresholds['warning_threshold']:
+        return 'warning'
+    return 'critical'
 
 def get_standard_time(step: str) -> int:
     settings = load_settings()
@@ -115,5 +124,19 @@ def calculate_final_estimate(stats: Dict, complexity: float, current_progress: D
         adjusted_time = active_time * complexity * delay_factor
     # print(f"Calculation: {critical_path_time} * {complexity} * {delay_factor} * {statistical_factor} * {progress_factor} = {adjusted_time}")
     return adjusted_time
+
+def analyze_parallel_risks(parallel_steps: List[str], dependencies: Dict) -> float:
+    if not parallel_steps:
+        return 1.0
+    
+    # Оценка рисков при параллельном выполнении
+    shared_deps = set()
+    for step in parallel_steps:
+        shared_deps.update(dependencies[step])
+    
+    # Чем больше общих зависимостей, тем выше риск
+    risk_factor = 1 + (len(shared_deps) * 0.15)
+    return min(2.0, risk_factor)
+
 
 

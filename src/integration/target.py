@@ -3,7 +3,7 @@ import math
 from .utils.calculations import get_standard_time
 from .models.statistical import StatisticalModel
 from .models.factor import FactorAnalysis
-from .utils.calculations import calculate_step_correlations, get_standard_time
+from .utils.calculations import calculate_step_correlations, get_standard_time, analyze_parallel_risks
 
 
 class IntegrationTarget:
@@ -48,13 +48,25 @@ class IntegrationTarget:
         # Корреляции между шагами
         correlations = calculate_step_correlations(steps_history)
         
-        # Итоговый расчет с учетом всех факторов
-        completion_rate = time_factor * (
-            1 - sum(t['trend_factor'] for t in trends) / len(trends)
-        ) / (
-            sum(complexities) / len(complexities)
-        ) * (
-            1 - sum(correlations.values()) / len(correlations) if correlations else 1
+        # Добавляем анализ параллельных рисков
+        parallel_risk = analyze_parallel_risks(
+            source_data['current_progress'].get('active_parallel_steps', []),
+            dependencies
+        )
+        # Анализ распределения задержек
+        delay_distributions = [
+            self.statistical_model.analyze_delay_distribution(step)
+            for step in remaining_steps
+        ]
+        delay_risk = sum(d['high_delay_prob'] for d in delay_distributions) / len(delay_distributions) if delay_distributions else 0
+
+        # Обновляем итоговый расчет
+        completion_rate = (time_factor * 
+            (1 - sum(t['trend_factor'] for t in trends) / len(trends)) /
+            (sum(complexities) / len(complexities)) *
+            (1 - sum(correlations.values()) / len(correlations) if correlations else 1) /
+            parallel_risk *
+            (1 - delay_risk)
         )
         
         return min(0.9, max(0, completion_rate))
