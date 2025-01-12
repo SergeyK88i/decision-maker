@@ -4,33 +4,25 @@ current_dir = os.path.dirname(os.path.abspath(__file__))
 root_dir = os.path.dirname(os.path.dirname(os.path.dirname(current_dir)))
 sys.path.insert(0, root_dir)
 
-from integration.predictor import IntegrationPredictor
-from integration.target import IntegrationTarget
-from integration.agent.smart_agent import IntegrationSmartAgent
-from integration.agent.ml_predictor import MLPredictor
+from src.integration.agent.smart_agent import IntegrationSmartAgent
+
 
 def run_demo():
-    # Создаем ML предиктор для умного анализа
-    ml_predictor = MLPredictor()
-    
-    # Тестовые данные
     source_data = {
         'characteristics': {
-            'data_volume': 2,        # Большой объем данных
-            'api_complexity': 2,     # Сложный API
-            'data_quality': 1        # Среднее качество
+            'data_volume': 0,
+            'api_complexity': 0,
+            'data_quality': 0
         },
         'current_progress': {
-            
-            'steps_history': {
-                'step1': 4,         # факт выполнения
-                'step2': 9          # факт выполнения
-            },
-            'available_parallel_steps': ['step2', 'step3'],         # шаги, которые можно выполнять параллельно
-            'active_parallel_steps': ['step3','step4'],              # шаги, которые сейчас выполняются параллельно
+            'active_parallel_steps': ['step3', 'step4'],
             'steps_time': {
-                'step3': 10,                                  # время только активного шага
-                'step4': 15,
+                'step3': 3,
+                'step4': 1,
+            },
+            'steps_history': {
+                'step1': 3,
+                'step2': 1
             },
             'steps_dependencies': {
                 'step1': [],
@@ -43,47 +35,41 @@ def run_demo():
             }
         }
     }
-    # Получаем стандартный прогноз
-    predictor = IntegrationPredictor()
-    prediction = predictor.predict_completion(source_data)
-
-    # Получаем умный анализ
-    features = ml_predictor.extract_features(source_data)
-    patterns = ml_predictor.analyze_patterns(source_data)
-    # Получаем текущий шаг из source_data
-    active_steps = source_data['current_progress']['active_parallel_steps']
-    current_step = max(int(''.join(filter(str.isdigit, step))) for step in active_steps)
-    impact = ml_predictor.calculate_impact(patterns[0], current_step)
-
-
-    # Создаем агента для комплексного анализа
+    
     agent = IntegrationSmartAgent()
-    analysis = agent.analyze_integration(source_data)
-    action = agent.redistribute_resources(analysis['prediction'])
-
+    result = agent.analyze_integration(source_data)
+    
+    # Добавим отладочный вывод
+    print("Полученный результат:", result)
+    
+    # Добавим проверку наличия ключей
+    ml_analysis = result.get('ml_analysis', 'Нет данных')
+    statistical_analysis = result.get('statistical_analysis', 'Нет данных')
+    print(ml_analysis)
+    print('statistical_analysis',statistical_analysis)
     print(f"""
-    Умный анализ интеграции:
-    1. Характеристики:
-       - Объем данных: {features['data_volume'][0]} (высокий)
-       - Сложность API: {features['api_complexity'][0]} (сложный)
-       - Качество данных: {features['data_quality'][0]} (среднее)
-
-    2. Риски:
-       - Уровень риска: {patterns[0]['risk_level']:.2f}
-       - Тип риска: {patterns[0]['risk_type']}
-       - Вероятность: {patterns[0]['probability']:.2f}
-
-    3. Влияние:
-       - На сроки: {impact['schedule_impact']:.1f} дней задержки
-       - На ресурсы: {impact['resource_impact']:.1f}x нагрузка
-       - На качество: {impact['quality_impact']:.1f}x риск ошибок
-
-    4. Рекомендации агента:
-       - Прогноз: {analysis['prediction']}
-       - Риски: {analysis['risks']}
-       - Статус ресурсов: {analysis['resource_status']}
-       - Действия: {analysis['recommendations']}
-       - Выбранное действие: {action}
+    Комплексный анализ интеграции:
+    
+    1. ML анализ и риски:
+    - Анализ паттернов: {result['ml_analysis']}
+    - Выявленные риски: {result['risks']}
+    
+    2. Статистика и прогресс:
+    - Статистический анализ: {result['statistical_analysis']}
+    - Прогресс выполнения: {result['prediction'].get('completion_percent', 0):.1f}%
+    
+    3. Факторы сложности:
+    - Факторный анализ: {result['factor_analysis']}
+    - Общая сложность: {result['prediction'].get('complexity_factor', 0):.2f}
+    
+    4. Статус и прогноз:
+    - Статус предупреждений: {result['warning_status']}
+    - Ожидаемое время: {result['prediction'].get('estimated_days', 0):.1f} дней
+    - Вероятность завершения: {result['completion_probability']*100:.1f}%
+    
+    5. Ресурсы и рекомендации:
+    - Статус ресурсов: {result['resource_status']}
+    - Рекомендации: {result['recommendations']}
     """)
 
 if __name__ == '__main__':
