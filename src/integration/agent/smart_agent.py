@@ -94,11 +94,42 @@ class IntegrationSmartAgent:
                                resources: Dict, critical_steps: List[str]) -> List[str]:
         recommendations = []
         
+        # Анализ статуса предупреждений
         if prediction.get('warning_status') == 'red':
             recommendations.append("Требуется немедленное вмешательство")
             
+        # Анализ рисков для каждого шага
         for risk in risks:
             for step in prediction.get('source_data', {}).get('current_progress', {}).get('active_parallel_steps', []):
                 recommendations.extend(self.ml_model.suggest_mitigation(risk, step))
+
+        # Анализ ресурсов
+        if resources.get('bottlenecks'):
+            recommendations.append(f"Обнаружены узкие места: {', '.join(resources['bottlenecks'])}")
+        
+        # Анализ утилизации ресурсов
+        for resource_id, util_data in resources['utilization'].items():
+            if util_data['used'] > 0.7:
+                recommendations.append(f"Высокая загрузка ресурса {resource_id} ({util_data['type']})")
+            elif util_data['used'] < 0.3:
+                recommendations.append(f"Низкая загрузка ресурса {resource_id} ({util_data['type']})")
+
+        # Рекомендации по распределению ресурсов
+        available_senior = [r for r in resources['resource_details'].items() 
+                           if r[1]['skill_level'] > 7 and r[1]['availability'] > 0.3]
+        if available_senior:
+            recommendations.append(f"Доступны старшие специалисты: {', '.join(r[0] for r in available_senior)}")
+
+        # Анализ соответствия требованиям шагов
+        for step in critical_steps:
+            requirements = self.resource_manager.get_step_requirements(step['step'])
+            suitable_resources = [
+                r_id for r_id, r_data in resources['resource_details'].items()
+                if r_data['skill_level'] >= requirements['min_skill'] 
+                and (r_data['type'] == requirements['preferred_type'] 
+                     or requirements['preferred_type'] == 'any')
+            ]
+            if suitable_resources:
+                recommendations.append(f"Для шага {step['step']} рекомендуются ресурсы: {', '.join(suitable_resources)}")
 
         return recommendations
